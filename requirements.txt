@@ -1,0 +1,22 @@
+# =============================================================================
+# Nexus AI — Phase 1: Multi-LLM Chatbot Dependencies
+# =============================================================================
+# Install with: pip install -r requirements.txt
+# We will add more packages in later phases (RAG, agents, etc.)
+# =============================================================================
+
+# --- UI ---
+gradio>=4.0.0
+
+# --- LLM Communication ---
+# OpenAI SDK works with OpenRouter, Groq, and Ollama (all OpenAI-compatible)
+openai>=1.0.0
+
+# Google Gemini SDK (free tier)
+google-generativeai>=0.5.0
+
+# --- Utilities ---
+python-dotenv>=1.0.0      # Load .env files
+pydantic>=2.0.0            # Data validation & settings management
+pydantic-settings>=2.0.0   # Settings management with .env support
+httpx>=0.25.0              # Modern async HTTP client
