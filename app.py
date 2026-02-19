@@ -24,6 +24,7 @@ from ui.chat_tab import create_chat_tab
 from ui.knowledge_tab import create_knowledge_tab
 from ui.agents_tab import create_agents_tab
 from ui.tools_tab import create_tools_tab
+from ui.dashboard_tab import create_dashboard_tab
 
 
 def create_app() -> gr.Blocks:
@@ -84,11 +85,7 @@ def create_app() -> gr.Blocks:
                 create_tools_tab()
 
             with gr.Tab("Dashboard"):
-                gr.Markdown(
-                    "### Coming in Phase 6\n"
-                    "Monitor token usage, costs, and performance "
-                    "across all models and providers."
-                )
+                create_dashboard_tab()
 
     return app
 

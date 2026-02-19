@@ -31,6 +31,7 @@ from llm_providers.base import ChatMessage
 from llm_providers.router import ProviderManager
 from llm_providers.system_prompts import DEFAULT_SYSTEM_PROMPT, RAG_SYSTEM_PROMPT
 from rag.query_engine import build_rag_context, format_rag_prompt, format_citations
+from monitoring.tracker import track_llm_call, Timer
 
 
 def create_chat_tab(manager: ProviderManager) -> gr.Blocks:
@@ -106,17 +107,43 @@ def create_chat_tab(manager: ProviderManager) -> gr.Blocks:
         messages.append(ChatMessage(role="user", content=message))
 
         # Step 3: Send to the LLM via the ProviderManager.
+        # Wrapped with monitoring to track tokens, cost, and latency.
         try:
-            response = manager.chat(
-                messages=messages,
+            with Timer() as t:
+                response = manager.chat(
+                    messages=messages,
+                    model=model_id,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+
+            # Log the interaction to our monitoring system
+            feature = "rag_chat" if (use_rag and citations_text) else "chat"
+            track_llm_call(
                 model=model_id,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                provider=response.provider,
+                input_tokens=response.usage.get("prompt_tokens", 0),
+                output_tokens=response.usage.get("completion_tokens", 0),
+                latency_ms=t.elapsed_ms,
+                success=True,
+                feature=feature,
             )
+
             # Append citations if RAG was used
             return response.content + citations_text
 
         except Exception as e:
+            # Log failures too — they help with debugging
+            track_llm_call(
+                model=model_id,
+                provider="unknown",
+                input_tokens=0,
+                output_tokens=0,
+                latency_ms=0,
+                success=False,
+                error=str(e),
+                feature="chat",
+            )
             return f"**Error:** {str(e)}\n\nPlease check your API key and try again."
 
     # ── Build the Gradio Layout ────────────────────────────────────────
