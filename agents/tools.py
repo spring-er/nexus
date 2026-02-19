@@ -172,10 +172,16 @@ def summarize_text(text: str) -> str:
 
 # ── Tool Registry ──────────────────────────────────────────────────────
 # All tools available to agents, collected in a list for easy registration.
+# Phase 3 tools (research) + Phase 4 tools (utilities) combined here.
+
+from agents.tool_library import UTILITY_TOOLS
 
 ALL_TOOLS = [
+    # Phase 3: Research tools
     web_search,
     scrape_webpage,
     knowledge_base_search,
     summarize_text,
+    # Phase 4: Utility tools (calculator, code runner, datetime, file writer)
+    *UTILITY_TOOLS,
 ]
