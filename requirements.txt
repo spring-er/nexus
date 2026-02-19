@@ -1,8 +1,7 @@
 # =============================================================================
-# Nexus AI — Phase 1: Multi-LLM Chatbot Dependencies
+# Nexus AI — Dependencies
 # =============================================================================
 # Install with: pip install -r requirements.txt
-# We will add more packages in later phases (RAG, agents, etc.)
 # =============================================================================
 
 # --- UI ---
@@ -14,6 +13,19 @@ openai>=1.0.0
 
 # Google Gemini SDK (free tier)
 google-generativeai>=0.5.0
+
+# --- Phase 2: RAG & Knowledge Base ---
+# LlamaIndex: Framework for RAG pipelines (chunking, indexing, querying)
+llama-index-core>=0.11.0
+llama-index-readers-file>=0.2.0       # PDF, TXT, MD file readers
+beautifulsoup4>=4.12.0                # HTML parsing for web URL ingestion
+llama-index-embeddings-huggingface>=0.3.0  # Free local embeddings
+
+# LanceDB: Local vector database (no server, stores on disk)
+lancedb>=0.17.0
+
+# YouTube transcript ingestion (no API key needed)
+youtube-transcript-api>=0.6.0
 
 # --- Utilities ---
 python-dotenv>=1.0.0      # Load .env files

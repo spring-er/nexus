@@ -21,6 +21,7 @@ import gradio as gr
 from config import settings
 from llm_providers.router import ProviderManager
 from ui.chat_tab import create_chat_tab
+from ui.knowledge_tab import create_knowledge_tab
 
 
 def create_app() -> gr.Blocks:
@@ -71,14 +72,8 @@ def create_app() -> gr.Blocks:
             with gr.Tab("Chat"):
                 create_chat_tab(manager)
 
-            # Placeholder tabs for future phases (shows the roadmap)
             with gr.Tab("Knowledge Base"):
-                gr.Markdown(
-                    "### Coming in Phase 2\n"
-                    "Upload documents, PDFs, and URLs to build your "
-                    "personal knowledge base. Ask questions that are "
-                    "answered from your own data using RAG."
-                )
+                create_knowledge_tab()
 
             with gr.Tab("Agents"):
                 gr.Markdown(
