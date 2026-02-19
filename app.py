@@ -22,6 +22,7 @@ from config import settings
 from llm_providers.router import ProviderManager
 from ui.chat_tab import create_chat_tab
 from ui.knowledge_tab import create_knowledge_tab
+from ui.agents_tab import create_agents_tab
 
 
 def create_app() -> gr.Blocks:
@@ -76,11 +77,7 @@ def create_app() -> gr.Blocks:
                 create_knowledge_tab()
 
             with gr.Tab("Agents"):
-                gr.Markdown(
-                    "### Coming in Phase 3\n"
-                    "AI agents that can research, write, and take "
-                    "actions on your behalf using LangGraph."
-                )
+                create_agents_tab()
 
             with gr.Tab("Tools"):
                 gr.Markdown(

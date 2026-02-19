@@ -27,6 +27,15 @@ lancedb>=0.17.0
 # YouTube transcript ingestion (no API key needed)
 youtube-transcript-api>=0.6.0
 
+# --- Phase 3: AI Agents ---
+# LangGraph: Graph-based agent workflows (think → act → observe loop)
+langgraph>=0.2.0
+langchain-core>=0.3.0             # Core abstractions for LangChain/LangGraph
+langchain-openai>=0.2.0           # OpenAI-compatible LLM wrapper for LangGraph
+
+# DuckDuckGo: Free web search (no API key needed)
+duckduckgo-search>=6.0.0
+
 # --- Utilities ---
 python-dotenv>=1.0.0      # Load .env files
 pydantic>=2.0.0            # Data validation & settings management
