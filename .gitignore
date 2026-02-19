@@ -30,6 +30,8 @@ Thumbs.db
 # Project data (large files, local only)
 data/vectordb/
 data/documents/
+data/outputs/
+data/monitoring/
 data/logs/
 
 # n8n
