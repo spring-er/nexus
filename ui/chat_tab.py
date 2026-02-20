@@ -222,9 +222,8 @@ def create_chat_tab(manager: ProviderManager) -> gr.Blocks:
                         use_rag_checkbox,
                     ],
                     title=None,
-                    retry_btn="Retry",
-                    undo_btn="Undo",
-                    clear_btn="Clear Chat",
+                    # Note: retry/undo/clear buttons are built into gr.Chatbot
+                    # automatically in Gradio 5.x — no need to specify them.
                 )
 
     return chat_tab

@@ -12,11 +12,11 @@ THIS IS WHY THE BASE CLASS MATTERS:
     it just calls `provider.chat(messages)` the same way every time.
 
 KEY DIFFERENCES FROM OPENAI-COMPATIBLE PROVIDERS:
-    1. Uses `google.generativeai` SDK (not `openai`)
+    1. Uses `google-genai` SDK (not `openai`)
     2. Roles: "user" and "model" (not "user" and "assistant")
-    3. System prompt: Passed via `system_instruction` parameter, NOT
-       as the first message in the conversation
-    4. Message format: Uses "parts" instead of "content"
+    3. System prompt: Passed via `system_instruction` in the config,
+       NOT as the first message in the conversation
+    4. Message format: Uses Content/Parts objects
 
 FREE TIER:
     Gemini Flash models are free with generous rate limits
@@ -31,19 +31,16 @@ from llm_providers.base import (
     ModelInfo,
 )
 
-# Lazy import: The Google SDK has heavy dependencies (grpc, cryptography).
-# If those fail to load (e.g., missing system libraries), we don't want
-# the entire app to crash — we just disable the Gemini provider.
+# Lazy import: The Google SDK has heavy dependencies.
+# If those fail to load, we just disable the Gemini provider.
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
 
     GEMINI_SDK_AVAILABLE = True
 except BaseException:
-    # We catch BaseException (not just Exception) because some SDK failures
-    # are Rust-level panics that don't inherit from Exception.
-    # On your local machine with a proper Python environment, this should
-    # never trigger — it's a safety net for unusual environments.
     genai = None  # type: ignore[assignment]
+    types = None  # type: ignore[assignment]
     GEMINI_SDK_AVAILABLE = False
 
 
@@ -68,27 +65,24 @@ class GeminiProvider(BaseLLMProvider):
     """
     LLM provider that connects to Google's Gemini API.
 
-    This provider uses Google's own SDK, which has a different API
-    structure than OpenAI-compatible providers. The main job of this
-    class is to translate between our standard ChatMessage format
-    and Gemini's format.
+    Uses the new `google-genai` SDK (replacing the deprecated
+    `google-generativeai` package). The main job of this class is to
+    translate between our standard ChatMessage format and Gemini's format.
 
     Attributes:
-        _configured: Whether the API key has been set up.
+        _client: The google.genai.Client instance, or None if not configured.
     """
 
     def __init__(self) -> None:
         """
         Initialize the Gemini provider.
 
-        google.generativeai uses a global configuration (genai.configure)
-        rather than a client instance. This is a design choice by Google —
-        you configure the API key once, then create model instances.
+        The new SDK uses an explicit Client object initialized with an
+        API key, replacing the old global genai.configure() pattern.
         """
-        self._configured = False
+        self._client = None
         if GEMINI_SDK_AVAILABLE and settings.google_api_key:
-            genai.configure(api_key=settings.google_api_key)
-            self._configured = True
+            self._client = genai.Client(api_key=settings.google_api_key)
 
     def chat(
         self,
@@ -112,16 +106,14 @@ class GeminiProvider(BaseLLMProvider):
             ]
 
         GEMINI FORMAT:
-            system_instruction = "You are helpful..."
+            config.system_instruction = "You are helpful..."
             history = [
-                {"role": "user", "parts": ["Hello"]},
-                {"role": "model", "parts": ["Hi there!"]},
+                Content(role="user", parts=[Part(text="Hello")]),
+                Content(role="model", parts=[Part(text="Hi there!")]),
             ]
             + send "How are you?" as the new message
         """
         # Step 1: Extract the system prompt (if any).
-        # In OpenAI format, the system prompt is the first message with role="system".
-        # Gemini handles it differently — as a separate parameter.
         system_instruction = None
         conversation_messages = []
 
@@ -131,40 +123,36 @@ class GeminiProvider(BaseLLMProvider):
             else:
                 conversation_messages.append(msg)
 
-        # Step 2: Create the Gemini model instance.
-        # We pass the system prompt here, NOT in the message list.
-        generation_config = genai.types.GenerationConfig(
+        # Step 2: Build the generation config.
+        config = types.GenerateContentConfig(
+            system_instruction=system_instruction,
             temperature=temperature,
             max_output_tokens=max_tokens,
         )
 
-        gemini_model = genai.GenerativeModel(
-            model_name=model,
-            system_instruction=system_instruction,
-            generation_config=generation_config,
-        )
-
-        # Step 3: Convert conversation history to Gemini's format.
+        # Step 3: Convert conversation history to Gemini's Content format.
         # Gemini uses "model" where OpenAI uses "assistant".
-        # Gemini uses "parts" (a list) where OpenAI uses "content" (a string).
         gemini_history = []
         for msg in conversation_messages[:-1]:  # All messages except the last
             gemini_role = "model" if msg.role == "assistant" else "user"
-            gemini_history.append({
-                "role": gemini_role,
-                "parts": [msg.content],
-            })
+            gemini_history.append(
+                types.Content(
+                    role=gemini_role,
+                    parts=[types.Part.from_text(msg.content)],
+                )
+            )
 
-        # Step 4: Start a chat session with the history and send the last message.
-        # Gemini's chat.send_message() appends to the history automatically.
-        chat_session = gemini_model.start_chat(history=gemini_history)
+        # Step 4: Create a chat session and send the last message.
+        chat_session = self._client.chats.create(
+            model=model,
+            config=config,
+            history=gemini_history,
+        )
 
-        # The last message is what we're actually asking
         last_message = conversation_messages[-1].content if conversation_messages else ""
         response = chat_session.send_message(last_message)
 
         # Step 5: Extract usage stats.
-        # Gemini provides these through response.usage_metadata.
         usage = {}
         if hasattr(response, "usage_metadata") and response.usage_metadata:
             usage = {
@@ -195,4 +183,4 @@ class GeminiProvider(BaseLLMProvider):
 
     def is_available(self) -> bool:
         """Check if the Gemini SDK loaded and a Google API key is set."""
-        return GEMINI_SDK_AVAILABLE and self._configured
+        return GEMINI_SDK_AVAILABLE and self._client is not None

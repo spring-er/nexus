@@ -12,7 +12,8 @@ gradio>=4.0.0
 openai>=1.0.0
 
 # Google Gemini SDK (free tier)
-google-generativeai>=0.5.0
+# Note: google-generativeai is deprecated. Use google-genai instead.
+google-genai>=1.0.0
 
 # --- Phase 2: RAG & Knowledge Base ---
 # LlamaIndex: Framework for RAG pipelines (chunking, indexing, querying)

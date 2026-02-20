@@ -57,7 +57,6 @@ def create_app() -> gr.Blocks:
     # major feature (chat, knowledge base, agents, etc.).
     with gr.Blocks(
         title="Nexus AI",
-        theme=gr.themes.Soft(),
     ) as app:
         # App header
         gr.Markdown(
@@ -102,6 +101,7 @@ def main() -> None:
         server_name="0.0.0.0",
         server_port=7860,
         share=False,
+        theme=gr.themes.Soft(),
     )
 
 
