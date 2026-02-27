@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4-turbo-preview"
     openai_embedding_model: str = "text-embedding-3-small"
 
+    # Anthropic (Claude)
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-sonnet-4-20250514"
+
     # Pinecone
     pinecone_api_key: str = ""
     pinecone_environment: str = ""
