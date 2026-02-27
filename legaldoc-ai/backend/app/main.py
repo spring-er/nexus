@@ -22,6 +22,15 @@ def create_app() -> FastAPI:
 
     application.include_router(api_router, prefix=settings.api_prefix)
 
+    # ── Health check (no auth required) ─────────────────
+    @application.get("/health", tags=["health"])
+    async def health_check():
+        return {
+            "status": "healthy",
+            "app": settings.app_name,
+            "version": settings.app_version,
+        }
+
     return application
 
 
