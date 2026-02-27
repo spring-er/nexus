@@ -21,6 +21,10 @@ from app.prompts.executive_summary import (
     SYSTEM_PROMPT_SUMMARY,
     USER_PROMPT_SUMMARY,
 )
+from app.prompts.comparison import (
+    SYSTEM_PROMPT_COMPARE,
+    USER_PROMPT_COMPARE,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -173,3 +177,38 @@ def generate_summary(
 
     # No delay after the final pass — nothing follows.
     return result
+
+
+# ── Pass 4: Document comparison ──────────────────────
+
+
+# Each document gets half the budget so the combined prompt fits context.
+_COMPARE_CHAR_LIMIT = MAX_DOCUMENT_CHARS // 2
+
+
+def compare_documents(doc_a: dict, doc_b: dict) -> dict:
+    """Compare two fully-analysed documents.
+
+    Args:
+        doc_a: First document row dict (must include extracted_text,
+               extracted_metadata, clause_analysis, filename, document_type).
+        doc_b: Second document row dict (same shape).
+
+    Returns:
+        Comparison dict with similarities, differences, risk comparison,
+        missing clauses in each, and a recommendation.
+    """
+    user_prompt = USER_PROMPT_COMPARE.format(
+        filename_a=doc_a.get("filename", "Document A"),
+        document_type_a=doc_a.get("document_type", "Unknown"),
+        metadata_a=doc_a.get("extracted_metadata", "{}"),
+        clauses_a=doc_a.get("clause_analysis", "{}"),
+        text_a=_truncate(doc_a.get("extracted_text", ""))[:_COMPARE_CHAR_LIMIT],
+        filename_b=doc_b.get("filename", "Document B"),
+        document_type_b=doc_b.get("document_type", "Unknown"),
+        metadata_b=doc_b.get("extracted_metadata", "{}"),
+        clauses_b=doc_b.get("clause_analysis", "{}"),
+        text_b=_truncate(doc_b.get("extracted_text", ""))[:_COMPARE_CHAR_LIMIT],
+    )
+
+    return call_claude(SYSTEM_PROMPT_COMPARE, user_prompt)
