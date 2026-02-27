@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/legaldoc_ai"
     database_echo: bool = False
 
+    # Supabase
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
+    supabase_storage_bucket: str = "documents"
+
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
